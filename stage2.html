@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stage 2 – Location Hints</title>
+  <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+  <style>
+    body { font-family: 'Trebuchet MS', sans-serif; background: #e8f8f5; text-align: center; }
+    h1 { color: #16a085; }
+    #reader { width: 300px; margin: 20px auto; display: none; }
+    .scan-btn { background: #16a085; color: white; padding: 15px 25px; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; }
+    .hint-box { margin-top: 20px; font-size: 20px; color: #7f8c8d; }
+    .error { margin-top: 20px; color: red; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>🧩 Stage 2 – Find the First Half</h1>
+  <p>Click the button to open your camera and scan QR codes hidden in the building. Each scan reveals a location hint for the first half of your treasure, plus teasers for Stage 3.</p>
+
+  <button class="scan-btn" onclick="openCamera()">📷 Open Camera</button>
+  <div id="reader"></div>
+
+  <div class="hint-box" id="hint">Hint will appear here...</div>
+  <div class="error" id="error"></div>
+
+  <script>
+    const validCodes = ["STAGE2-CODE-1","STAGE2-CODE-2","STAGE2-CODE-3"]; // ✅ Replace with your codes
+    let savedHints = localStorage.getItem("stage2Hints") ? JSON.parse(localStorage.getItem("stage2Hints")) : [];
+    if (savedHints.length > 0) {
+      document.getElementById("hint").innerText = "Previous Hints:\n" + savedHints.join("\n");
+    }
+
+    let html5QrCode;
+    function onScanSuccess(decodedText) {
+      if (validCodes.includes(decodedText)) {
+        savedHints.push(decodedText);
+        localStorage.setItem("stage2Hints", JSON.stringify(savedHints));
+        document.getElementById("hint").innerText = "📍 Location Hint: " + decodedText + "\n\nAll Hints:\n" + savedHints.join("\n");
+        document.getElementById("error").innerText = "";
+      } else {
+        document.getElementById("error").innerText = "❌ Not a valid hunt QR!";
+      }
+    }
+    function onScanError(errorMessage) { console.warn(errorMessage); }
+    function openCamera() {
+      document.getElementById("reader").style.display = "block";
+      html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess, onScanError);
+    }
+  </script>
+</body>
+</html>

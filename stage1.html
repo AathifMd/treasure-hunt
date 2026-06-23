@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stage 1 – Discover the Treasure</title>
+  <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+  <style>
+    body { font-family: 'Comic Sans MS', cursive; background: #fef9e7; text-align: center; }
+    h1 { color: #d35400; }
+    #reader { width: 300px; margin: 20px auto; display: none; }
+    .scan-btn { background: #d35400; color: white; padding: 15px 25px; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; }
+    .progress { margin-top: 20px; font-weight: bold; color: #27ae60; }
+    .hint-box { margin-top: 20px; font-size: 20px; color: #8e44ad; }
+    .error { margin-top: 20px; color: red; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Stage 1 – What is the Treasure?</h1>
+  <p>Click the button to open your camera and scan the 5 shortlisted QR codes. Each scan reveals a hint!</p>
+
+  <button class="scan-btn" onclick="openCamera()">📷 Open Camera</button>
+  <div id="reader"></div>
+
+  <div class="progress" id="progress">QR Codes Scanned: 0 / 5</div>
+  <div class="hint-box" id="hint">Hint will appear here...</div>
+  <div class="error" id="error"></div>
+
+  <script>
+    // ✅ Define the valid codes for Stage 1
+    const validCodes = [
+      "STAGE1-CODE-1",
+      "STAGE1-CODE-2",
+      "STAGE1-CODE-3",
+      "STAGE1-CODE-4",
+      "STAGE1-CODE-5"
+    ];
+
+    let count = localStorage.getItem("stage1Count") ? parseInt(localStorage.getItem("stage1Count")) : 0;
+    document.getElementById("progress").innerText = "QR Codes Scanned: " + count + " / 5";
+
+    let html5QrCode;
+    function onScanSuccess(decodedText) {
+      if (validCodes.includes(decodedText)) {
+        count++;
+        localStorage.setItem("stage1Count", count);
+        document.getElementById("progress").innerText = "QR Codes Scanned: " + count + " / 5";
+        document.getElementById("hint").innerText = "✨ Hint " + count + ": " + decodedText;
+        document.getElementById("error").innerText = "";
+      } else {
+        document.getElementById("error").innerText = "❌ Not a valid hunt QR!";
+      }
+    }
+    function onScanError(errorMessage) { console.warn(errorMessage); }
+    function openCamera() {
+      document.getElementById("reader").style.display = "block";
+      html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess, onScanError);
+    }
+  </script>
+</body>
+</html>
