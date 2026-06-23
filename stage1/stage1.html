@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Stage 1 – Discover the Treasure</title>
-  <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
   <style>
     body { font-family: 'Comic Sans MS', cursive; background: #fef9e7; text-align: center; }
     h1 { color: #d35400; }
@@ -18,7 +18,8 @@
   <h1>🔍 Stage 1 – What is the Treasure?</h1>
   <p>Click the button to open your camera and scan the 5 shortlisted QR codes. Each scan reveals a hint!</p>
 
-  <button class="scan-btn" onclick="openCamera()">📷 Open Camera</button>
+  <button class="scan-btn" id="openCamera">📷 Open Camera</button>
+  <button class="scan-btn" id="closeCamera" style="background: #e74c3c; display: none;">❌ Close Camera</button>
   <div id="reader"></div>
 
   <div class="progress" id="progress">QR Codes Scanned: 0 / 5</div>
@@ -26,7 +27,6 @@
   <div class="error" id="error"></div>
 
   <script>
-    // ✅ Define the valid codes for Stage 1
     const validCodes = [
       "STAGE1-CODE-1",
       "STAGE1-CODE-2",
@@ -39,6 +39,8 @@
     document.getElementById("progress").innerText = "QR Codes Scanned: " + count + " / 5";
 
     let html5QrCode;
+    let isRunning = false;
+
     function onScanSuccess(decodedText) {
       if (validCodes.includes(decodedText)) {
         count++;
@@ -50,12 +52,59 @@
         document.getElementById("error").innerText = "❌ Not a valid hunt QR!";
       }
     }
-    function onScanError(errorMessage) { console.warn(errorMessage); }
-    function openCamera() {
-      document.getElementById("reader").style.display = "block";
-      html5QrCode = new Html5Qrcode("reader");
-      html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess, onScanError);
+
+    function onScanError(errorMessage) {
+      console.warn(errorMessage);
     }
+
+    // Open Camera Button
+    document.getElementById("openCamera").addEventListener("click", () => {
+      document.getElementById("openCamera").style.display = "none";
+      document.getElementById("closeCamera").style.display = "inline-block";
+      document.getElementById("reader").style.display = "block";
+      document.getElementById("error").innerText = "Starting camera...";
+
+      html5QrCode = new Html5Qrcode("reader");
+
+      Html5Qrcode.getCameras().then(cameras => {
+        if (cameras && cameras.length) {
+          html5QrCode.start(
+            cameras[0].id,
+            { fps: 10, qrbox: 250 },
+            onScanSuccess,
+            onScanError
+          ).then(() => {
+            isRunning = true;
+            document.getElementById("error").innerText = "";
+            console.log("Camera started successfully");
+          }).catch(err => {
+            document.getElementById("error").innerText = "❌ Error starting camera: " + err;
+            console.error("Error starting camera:", err);
+          });
+        } else {
+          document.getElementById("error").innerText = "❌ No cameras found on this device.";
+        }
+      }).catch(err => {
+        document.getElementById("error").innerText = "❌ Camera permission denied or not available.";
+        console.error("Camera error:", err);
+      });
+    });
+
+    // Close Camera Button
+    document.getElementById("closeCamera").addEventListener("click", () => {
+      if (isRunning) {
+        html5QrCode.stop().then(() => {
+          isRunning = false;
+          document.getElementById("reader").style.display = "none";
+          document.getElementById("closeCamera").style.display = "none";
+          document.getElementById("openCamera").style.display = "inline-block";
+          document.getElementById("error").innerText = "";
+          console.log("Camera stopped");
+        }).catch(err => {
+          console.error("Error stopping camera:", err);
+        });
+      }
+    });
   </script>
 </body>
 </html>
